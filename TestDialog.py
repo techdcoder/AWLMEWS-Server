@@ -2,6 +2,7 @@ from SocketHandler import *
 from WaterLevelInputDialog import *
 from SampleSizeInputDialog import *
 from SettingsDialog import *
+from FileHandler import *
 
 class TestDialog(QtWidgets.QDialog):
     def __init__(self, socketHandler : SocketHandler, filePath : str, description : str, settings : Settings):
@@ -9,6 +10,7 @@ class TestDialog(QtWidgets.QDialog):
 
         self.filePath = filePath
         self.description = description
+        self.fileHandler = FileHandler(self.filePath,self.description)
         self.socketHandler = socketHandler
         self.settings = settings
 
@@ -50,7 +52,7 @@ class TestDialog(QtWidgets.QDialog):
         testParameters.sensorType = self.getSensorType()
         SettingsDialog(self.settings, self.socketHandler).exec()
 
-        self.socketHandler.testPrototype.emit(testParameters)
+        self.socketHandler.testPrototype.emit(testParameters,self.fileHandler,self.settings)
 
     @QtCore.Slot() 
     def precisionTest(self):
@@ -60,7 +62,7 @@ class TestDialog(QtWidgets.QDialog):
         testParameters.sensorType = self.getSensorType()
         SettingsDialog(self.settings, self.socketHandler).exec()
 
-        self.socketHandler.testPrototype.emit(testParameters)
+        self.socketHandler.testPrototype.emit(testParameters,self.fileHandler,self.settings)
     @QtCore.Slot()
     def latencyTest(self):
         testParameters = TestParameters()

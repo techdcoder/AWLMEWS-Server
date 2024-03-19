@@ -1,6 +1,7 @@
 from TestDialog import *
 from InfoDialog import *
 from SettingsDialog import *
+from DemoWindow import *
 
 class ControlPanelWindow(QtWidgets.QMainWindow):
     def __init__(self, socketHandler : SocketHandler, serverThread : QtCore.QThread):
@@ -15,12 +16,16 @@ class ControlPanelWindow(QtWidgets.QMainWindow):
         self.mainLayout = QtWidgets.QVBoxLayout(self.mainWidget)
 
         self.testButton = QtWidgets.QPushButton("Test")
+        self.demoButton = QtWidgets.QPushButton("Demo")
         self.settingsButton = QtWidgets.QPushButton("Settings")
         self.exitButton = QtWidgets.QPushButton("Exit")
 
         self.mainLayout.addWidget(self.testButton)
         self.testButton.clicked.connect(self.testButtonCallback)    
-        
+
+        self.mainLayout.addWidget(self.demoButton)
+        self.demoButton.clicked.connect(self.demoButtonCallback)
+
         self.mainLayout.addWidget(self.settingsButton)
         self.settingsButton.clicked.connect(self.settingsButtonCallback)
 
@@ -34,11 +39,16 @@ class ControlPanelWindow(QtWidgets.QMainWindow):
         filePath,description = InfoDialog().exec()
         TestDialog(self.socketHandler,filePath,description,self.settings).exec()
 
+    @QtCore.Slot()
+    def demoButtonCallback(self):
+        self.demoWindow = DemoWindow(self, self.socketHandler)
+        self.demoWindow.show()
+        self.hide()
+
     @QtCore.Slot() 
     def settingsButtonCallback(self):
         SettingsDialog(self.settings, self.socketHandler).exec()
 
     @QtCore.Slot() 
     def exitButtonCallback(self):
-        pass 
-        
+        self.close()
