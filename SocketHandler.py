@@ -1,8 +1,8 @@
-from PySide6 import QtCore
+from PySide6 import QtNetwork
 from socket import *
-from Settings import *
 from TestParameters import *
 from FileHandler import *
+
 import select
 
 
@@ -22,8 +22,11 @@ class SocketHandler(QtCore.QObject):
     def __init__(self,port : int):
         super().__init__()
 
+        ipList = QtNetwork.QHostInfo.fromName(QtNetwork.QHostInfo.localHostName()).addresses()
+
+
         self.serverSocket = socket(AF_INET,SOCK_STREAM)
-        self.location = ("192.168.1.39",port)
+        self.location = (ipList[-1].toString(),port)
         self.serverSocket.bind(self.location)
         self.serverSocket.listen()
 
