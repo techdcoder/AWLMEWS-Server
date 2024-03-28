@@ -10,6 +10,7 @@ class SocketHandler(QtCore.QObject):
     connected = QtCore.Signal()
     done = QtCore.Signal()
     updated = QtCore.Signal()
+    updateTime = QtCore.Signal()
 
     beginDemoMode = QtCore.Signal()
     demoModeUpdated = QtCore.Signal(float,float)
@@ -40,6 +41,8 @@ class SocketHandler(QtCore.QObject):
 
         self.beginDemoMode.connect(self.startDemoMode)
         self.endDemoMode.connect(self.terminateDemoMode)
+
+        self.updateTime.connect(self.syncTime)
 
         self.awlmewsSocket = None
         self.awlmewsAddr = None
@@ -76,14 +79,20 @@ class SocketHandler(QtCore.QObject):
         self.done.emit()
         mean /= testParameters.sampleSize
 
+        mn, mx = 1000000, 0
         for sample in data:
             deviation += (sample-testParameters.waterLevel)**2
             stddev += (sample-mean)**2
+            mn = min(sample,mn)
+            mx = max(sample,mx)
+
         deviation /= testParameters.sampleSize
         stddev /= testParameters.sampleSize
 
         deviation **= 0.5
         stddev **= 0.5
+        r = mx - mn
+
 
         if testParameters.testType == testParameters.ACCURACY_TEST:
             fileHandler.writeTestResultAccuracy(setting)
@@ -94,6 +103,11 @@ class SocketHandler(QtCore.QObject):
         print("Mean: ", mean)
         print("STD Dev.", stddev)
         print("Deviation from True Water Level: ", deviation)
+        print("Max: ", mx)
+        print("Min: ", mn)
+        print("Median: ", data[len(data)//2])
+        print("Range: ", r)
+        print("Difference: ", abs(mean - testParameters.waterLevel))
 
     @QtCore.Slot()
     def startDemoMode(self):
@@ -122,5 +136,13 @@ class SocketHandler(QtCore.QObject):
                     ultrasonicReading,tofReading = msg.split(' ')
                     self.demoModeUpdated.emit(float(ultrasonicReading),float(tofReading))
 
+
+    def syncTime(self):
+        datetime = QtCore.QDateTime.currentDateTime()
+        time = datetime.time()
+
+        msg = "m " + str(time.hour()) + " " + str(time.minute()) + " " +  str(time.second()) + " " + str(time.msec())
+        print(msg)
+        self.awlmewsSocket.sendall(msg.encode())
     def close(self):
         self.serverSocket.close()

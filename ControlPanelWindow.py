@@ -18,6 +18,7 @@ class ControlPanelWindow(QtWidgets.QMainWindow):
         self.testButton = QtWidgets.QPushButton("Test")
         self.demoButton = QtWidgets.QPushButton("Demo")
         self.settingsButton = QtWidgets.QPushButton("Settings")
+        self.syncTimeButton = QtWidgets.QPushButton("Sync Time")
         self.exitButton = QtWidgets.QPushButton("Exit")
 
         self.mainLayout.addWidget(self.testButton)
@@ -28,6 +29,9 @@ class ControlPanelWindow(QtWidgets.QMainWindow):
 
         self.mainLayout.addWidget(self.settingsButton)
         self.settingsButton.clicked.connect(self.settingsButtonCallback)
+
+        self.mainLayout.addWidget(self.syncTimeButton)
+        self.syncTimeButton.clicked.connect(self.syncTimeButtonCallback)
 
         self.mainLayout.addWidget(self.exitButton)
         self.exitButton.clicked.connect(self.exitButtonCallback)
@@ -48,6 +52,9 @@ class ControlPanelWindow(QtWidgets.QMainWindow):
     @QtCore.Slot() 
     def settingsButtonCallback(self):
         SettingsDialog(self.settings, self.socketHandler).exec()
+
+    def syncTimeButtonCallback(self):
+        self.socketHandler.updateTime.emit()
 
     @QtCore.Slot() 
     def exitButtonCallback(self):
