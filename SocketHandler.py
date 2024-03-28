@@ -24,6 +24,9 @@ class SocketHandler(QtCore.QObject):
 
         ipList = QtNetwork.QHostInfo.fromName(QtNetwork.QHostInfo.localHostName()).addresses()
 
+        print("IP Addresses: ")
+        for ipAddr in ipList:
+            print(ipAddr.toString())
 
         self.serverSocket = socket(AF_INET,SOCK_STREAM)
         self.location = (ipList[-1].toString(),port)
