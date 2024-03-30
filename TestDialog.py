@@ -71,4 +71,4 @@ class TestDialog(QtWidgets.QDialog):
         testParameters.sensorType = self.getSensorType()
         SettingsDialog(self.settings, self  .socketHandler).exec()
 
-        self.socketHandler.testPrototype.emit(testParameters)
+        self.socketHandler.testPrototype.emit(testParameters,self.fileHandler,self.settings)

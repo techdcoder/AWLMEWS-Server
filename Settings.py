@@ -40,14 +40,14 @@ class Settings:
                  + str(int(self.sirenEnabled)))
         return msg
 
-    def writeToFile(self, textStream : QtCore.QTextStream):
-        textStream << "SETTINGS:\n"
-        textStream << "Ultrasonic Samples: " << self.ultraSonicSamples << '\n'
-        textStream << "TOF Samples: " << self.tofSamples << '\n'
-        textStream << "TOF Signal Rate Limit: " << self.tofSignalRateLimit << '\n'
-        textStream << "TOF Timing Budget: " << self.tofTimingBudget << '\n'
-        textStream << "Prototype Height: " << self.prototypeHeight << '\n'
-        textStream << "Threshold: " << self.threshold << '\n'
-        textStream << "IOT Enabled: " << self.iotEnabled << '\n'
-        textStream << "Facebook Enabled: " << self.facebookEnabled << '\n'
-        textStream << "Siren Enabled: " << self.facebookEnabled << '\n'
+    def writeToFile(self, file : QtCore.QFile):
+        file.write("SETTINGS:\n".encode())
+        file.write(f"Ultrasonic Samples: {self.ultraSonicSamples}\n".encode())
+        file.write(f"TOF Samples: {self.tofSamples}\n".encode())
+        file.write(f"TOF Signal Rate Limit: {self.tofSignalRateLimit}\n".encode())
+        file.write(f"TOF Timing Budget: {self.tofTimingBudget}\n".encode())
+        file.write(f"Prototype Height: {self.prototypeHeight}\n".encode())
+        file.write(f"Threshold: {self.threshold}\n".encode())
+        file.write(f"IOT Enabled: {self.iotEnabled}\n".encode())
+        file.write(f"Facebook Enabled: {self.facebookEnabled}\n".encode())
+        file.write(f"Siren Enabled: {self.sirenEnabled}\n".encode())
