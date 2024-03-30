@@ -1,0 +1,39 @@
+ACCURACY TEST
+----------------------------------------
+Description:
+
+----------------------------------------
+SETTINGS:
+Ultrasonic Samples: 5
+TOF Samples: 5
+TOF Signal Rate Limit: 0.25
+TOF Timing Budget: 20000
+Prototype Height: 30.0
+Threshold: 10.0
+IOT Enabled: True
+Facebook Enabled: True
+Siren Enabled: True
+----------------------------------------
+Sample Size: 10
+True Value: 10.0
+Mean: 15.235999999999999
+STD Dev.: 0.6047015792934561
+Deviation from Water Level: 5.270802595430794
+Max: 16.06
+Min: 14.04
+Median: 15.32
+Range: 2.0199999999999996
+Difference: 5.235999999999999
+
+DATA:
+----------------------------------------
+14.04
+15.16
+14.6
+14.68
+15.56
+15.32
+15.44
+16.02
+15.48
+16.06

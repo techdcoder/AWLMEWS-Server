@@ -123,8 +123,13 @@ class SocketHandler(QtCore.QObject):
         while True:
             input = self.awlmewsSocket.recv(1024).decode('utf-8')
             if len(input) >= 3:
+                processed = ""
+                for ch in input:
+                    if ch == '\n' or ch == '\r':
+                        continue
+                    processed += ch
                 count += 1
-                value = float(str(input))
+                value = float(str(processed))
                 data.append(value)
                 mean += value
                 if count == testParameters.sampleSize:
