@@ -1,0 +1,1 @@
+- Have a well defined, reliable, communication system between arduino client and server

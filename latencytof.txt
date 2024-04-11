@@ -1,0 +1,24 @@
+Sample Size: 20
+SENSOR TYPE: TOF
+Latencies:
+491ms
+262ms
+263ms
+260ms
+258ms
+256ms
+258ms
+261ms
+257ms
+256ms
+268ms
+278ms
+264ms
+257ms
+207ms
+256ms
+257ms
+257ms
+260ms
+260ms
+Average Latency: 269.3ms

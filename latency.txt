@@ -1,0 +1,23 @@
+Sample Size: 20
+Sensor Type: Latencies:
+981ms
+747ms
+750ms
+746ms
+750ms
+785ms
+751ms
+751ms
+749ms
+751ms
+753ms
+753ms
+755ms
+752ms
+752ms
+750ms
+749ms
+752ms
+754ms
+748ms
+Average Latency: 763.95ms

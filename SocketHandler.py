@@ -54,7 +54,7 @@ class SocketHandler(QtCore.QObject):
 
     def updateSettingsFunc(self, settings: Settings):
         settings.print()
-        msg = settings.encode()
+        msg = settings.encode() + "\n"
         print(msg)
         self.awlmewsSocket.send(msg.encode())
         self.updated.emit()
@@ -64,56 +64,44 @@ class SocketHandler(QtCore.QObject):
     def testFunc(self, testParameters : TestParameters, fileHandler : FileHandler, setting : Settings):
         testParameters.print()
         if testParameters.testType == testParameters.LATENCY_TEST:
+            fileHandler.writeStr(f"Sample Size: {testParameters.sampleSize}\n")
+            fileHandler.writeStr("SENSOR TYPE: ")
+            if testParameters.sensorType == testParameters.ULTRASONIC_SENSOR:
+                fileHandler.writeStr("ULTRASONIC\n")
+            else:
+                fileHandler.writeStr("TOF\n")
+            fileHandler.writeStr("Latencies:\n")
+
+
             print("LATENCY TEST")
+
+
+
             self.syncTime()
-            msg = 'l ' + str(testParameters.sampleSize)
+            msg = 'l ' + str(testParameters.sampleSize) + ' ' + str(testParameters.sensorType)
             self.awlmewsSocket.sendall(msg.encode())
 
-            total = 0
-            latency = 0
-            while True:
-
-                buf = self.awlmewsSocket.recv(1024).decode('UTF-8')
-                latencies = []
-                if len(buf) >= 3:
-                    total += 1
-                    t = buf.split(' ')
-                    hour = int(t[0])
-                    minute = int(t[1])
-                    second = int(t[2])
-                    millisecond = int(t[3])
-
-                    print("HOUR: ", hour)
-                    print("MINUTE: ", minute)
-                    print("SECOND: ", second)
-                    print("MILLISECOND: ", millisecond)
-
-                    dateTime = QtCore.QDateTime.currentDateTime()
-                    time = dateTime.time()
-
-                    rhour = time.hour()
-                    rminute = time.minute()
-                    rsecond = time.second()
-                    rmillisecond = time.msec()
-
-                    diff = (rmillisecond - millisecond) + 1000 * (rsecond - second) + 1000 * 60 * (rminute - minute) + 1000 * 60 * 60 * (rhour - hour)
-                    latencies.append(diff)
-                    latency += diff
-                    if total == testParameters.sampleSize:
+            latencyAvg = 0
+            for i in range(0,testParameters.sampleSize):
+                startTime = QtCore.QDateTime.currentDateTime().time()
+                while True:
+                    buf = self.awlmewsSocket.recv(1024)
+                    if len(buf) >= 2:
                         break
-            latency /= testParameters.sampleSize
-            print("LATENCY: ", latency, "ms")
+                endTime = QtCore.QDateTime.currentDateTime().time()
+                if i < testParameters.sampleSize:
+                    self.awlmewsSocket.sendall("ping\n".encode())
 
-            fileHandler.writeStr(f"LATENCY: {latency} ms\n")
-            fileHandler.writeStr("----------------------------------------\n")
-            for l in latencies:
-                fileHandler.writeStr(f"{l} ms\n")
-            self.done.emit()
+                diff = (endTime.hour()-startTime.hour())*60*60*1000 + (endTime.minute()-startTime.minute())*60*1000 + (endTime.second()-startTime.second())*1000 + (endTime.msec() - startTime.msec())
+                latencyAvg += diff
+                print("DIFF: ", diff)
+                fileHandler.writeStr(f"{diff}ms\n")
+            fileHandler.writeStr(f"Average Latency: {latencyAvg / testParameters.sampleSize}ms\n")
+            print("AVERAGE LATENCY: ", latencyAvg / testParameters.sampleSize)
+            fileHandler.file.close()
             return
-
-        msg = 't ' + str(testParameters.sampleSize) + ' ' + str(testParameters.sensorType)
+        msg = 't ' + str(testParameters.sampleSize) + ' ' + str(testParameters.sensorType) + '\n'
         self.awlmewsSocket.send(msg.encode())
-
         data = []
         mean = 0.0
         deviation = 0.0
@@ -122,27 +110,38 @@ class SocketHandler(QtCore.QObject):
         count = 0
         while True:
             input = self.awlmewsSocket.recv(1024).decode('utf-8')
-            if len(input) >= 3:
-                processed = ""
-                for ch in input:
-                    if ch == '\n' or ch == '\r':
-                        continue
-                    processed += ch
-                count += 1
-                value = float(str(processed))
-                data.append(value)
-                mean += value
-                if count == testParameters.sampleSize:
-                    break
+            processed = ""
+            done = False
+            for ch in input:
+                processed += ch
+                if ch == '\n' or ch == '\r':
+                    if len(processed) < 3:
+                        break
+                    processed = processed[:-1]
+                    count += 1
+                    value = float(str(processed))
+                    print("COUNT: ", count, " VALUE: ",value)
+                    data.append(value)
+                    mean += value
+                    if count == testParameters.sampleSize:
+                        done = True
+                        break
+            if done:
+                break
         mean /= testParameters.sampleSize
 
         mn, mx = 1000000, 0
+        errors = []
+        errorAvg = 0
         for sample in data:
             deviation += (sample-testParameters.waterLevel)**2
             stddev += (sample-mean)**2
             mn = min(sample,mn)
             mx = max(sample,mx)
-
+            error = abs(sample - testParameters.waterLevel) / testParameters.waterLevel * 100
+            errorAvg += error
+            errors.append(error)
+        errorAvg /= testParameters.sampleSize
         deviation /= testParameters.sampleSize
         stddev /= testParameters.sampleSize
 
@@ -157,6 +156,12 @@ class SocketHandler(QtCore.QObject):
             fileHandler.writeTestResultPrecision(setting)
 
         fileHandler.writeStr(f"Sample Size: {testParameters.sampleSize}\n")
+        fileHandler.writeStr(f"Sensor Type: ")
+        if testParameters.sensorType == testParameters.ULTRASONIC_SENSOR:
+            fileHandler.writeStr("ULTRASONIC\n")
+        else:
+            fileHandler.writeStr("TOF\n")
+
         fileHandler.writeStr(f"True Value: {testParameters.waterLevel}\n")
         fileHandler.writeStr(f"Mean: {mean}\n")
         fileHandler.writeStr(f"STD Dev.: {stddev}\n")
@@ -166,6 +171,7 @@ class SocketHandler(QtCore.QObject):
         fileHandler.writeStr(f"Median: {data[len(data)//2]}\n")
         fileHandler.writeStr(f"Range: {r}\n")
         fileHandler.writeStr(f"Difference: {abs(mean - testParameters.waterLevel)}\n")
+        fileHandler.writeStr(f"Average Error {errorAvg}%\n")
         print("True Value: ", testParameters.waterLevel)
         print("Mean: ", mean)
         print("STD Dev.", stddev)
@@ -175,12 +181,18 @@ class SocketHandler(QtCore.QObject):
         print("Median: ", data[len(data)//2])
         print("Range: ", r)
         print("Difference: ", abs(mean - testParameters.waterLevel))
+        print("Average Error: ", errorAvg, "%")
 
         fileHandler.writeStr("\nDATA:\n----------------------------------------\n")
+
 
         for sample in data:
             fileHandler.writeStr(f"{sample}\n")
 
+        fileHandler.writeStr("\nERROR   :\n----------------------------------------\n")
+        for error in errors:
+            fileHandler.writeStr(f"{error}%\n")
+        fileHandler.file.close()
         self.done.emit()
 
     @QtCore.Slot()
@@ -212,18 +224,7 @@ class SocketHandler(QtCore.QObject):
 
 
     def syncTime(self):
-        datetime = QtCore.QDateTime.currentDateTime()
-        time = datetime.time()
-
-        msg = "m"
-        self.awlmewsSocket.sendall(msg.encode())
-        while True:
-            fb = self.awlmewsSocket.recv(1024)
-            print(len(fb))
-            if len(fb) >= 2:
-                break
-        time = str(time.hour()) + " " + str(time.minute()) + " " + str(time.second()) + " " + str(time.msec())
-        self.awlmewsSocket.sendall(time.encode())
-        print(time)
+        print("SYNC TIME DOES NOTHING")
+        pass
     def close(self):
         self.serverSocket.close()
